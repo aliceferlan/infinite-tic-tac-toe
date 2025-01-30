@@ -15,10 +15,11 @@ type GameBoard struct {
 }
 
 type Game struct {
-	// history     []GameBoard
 	GameBoard
 	currentTurn int
 	player      []string
+	playerDead  []string
+	playerWin   []string
 }
 
 type TicTacToe struct {
@@ -28,7 +29,7 @@ type TicTacToe struct {
 type GameInterface interface {
 	initialize()
 	checkWin() string
-	outputBoard()
+	outputBoard(int)
 	inputWating() []int
 	updateBoard([]int) error
 
@@ -42,7 +43,9 @@ func (t *TicTacToe) initialize() {
 		{Cell{0, 0}, Cell{0, 0}, Cell{0, 0}},
 	}
 	t.currentTurn = 0
-	t.player = []string{"X", "O"}
+	t.player = []string{"😃", "😺"}
+	t.playerDead = []string{"😱", "🙀"}
+	t.playerWin = []string{"😂", "😹"}
 }
 
 func (t *TicTacToe) checkWin() string {
@@ -83,7 +86,7 @@ func (t *TicTacToe) checkWin() string {
 	return "none"
 }
 
-func (t *TicTacToe) outputBoard() {
+func (t *TicTacToe) outputBoard(winner string) {
 
 	fmt.Print("\033[H\033[2J")
 
@@ -91,18 +94,26 @@ func (t *TicTacToe) outputBoard() {
 		for j, cell := range row {
 			switch cell.value {
 			case 0:
-				fmt.Print(" ")
+				fmt.Print("  ")
 			case 1:
 				if cell.lifeTime == 1 {
-					fmt.Print("Y")
+					fmt.Print(t.playerDead[0])
+				} else if winner == t.player[0] {
+					fmt.Print(t.playerWin[0])
+				} else if winner == t.player[1] {
+					fmt.Print(t.playerDead[0])
 				} else {
-					fmt.Print("X")
+					fmt.Print(t.player[0])
 				}
 			case 2:
 				if cell.lifeTime == 1 {
-					fmt.Print("P")
+					fmt.Print(t.playerDead[1])
+				} else if winner == t.player[1] {
+					fmt.Print(t.playerWin[1])
+				} else if winner == t.player[0] {
+					fmt.Print(t.playerDead[1])
 				} else {
-					fmt.Print("O")
+					fmt.Print(t.player[1])
 				}
 			}
 
@@ -142,16 +153,15 @@ func (t *TicTacToe) updateBoard(move []int) error {
 	}
 
 	// 現在のボードの全セルのライフタイムを更新
-	for _, row := range t.board {
-		for _, cell := range row {
-			if cell.value != 0 { // 空白でないセルのみ
-				cell.lifeTime--
+	for i := range t.board {
+		for j := range t.board[i] {
+			if t.board[i][j].lifeTime > 0 { // 空白でないセルのみ
+				t.board[i][j].lifeTime--
 
-				// 死んだアイコンを削除
-				if cell.lifeTime == 0 {
-					cell.value = 0
+				// 死んだセルを削除
+				if t.board[i][j].lifeTime <= 0 {
+					t.board[i][j].value = 0
 				}
-
 			}
 		}
 	}
@@ -178,16 +188,17 @@ func main() {
 	var game TicTacToe
 	game.initialize()
 
-	game.outputBoard()
+	game.outputBoard("")
 
 	for {
 		if winner := game.checkWin(); winner != "" {
+			game.outputBoard(winner)
 			game.finishing(winner)
 			break
 		}
 
 		input := game.inputWating()
 		game.updateBoard(input)
-		game.outputBoard()
+		game.outputBoard("")
 	}
 }
