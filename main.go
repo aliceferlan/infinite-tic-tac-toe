@@ -47,30 +47,35 @@ func (t *TicTacToe) initialize() {
 
 func (t *TicTacToe) checkWin() string {
 
-	for i := 0; i < 3; i++ {
+	// チェック用関数
+	check := func(a, b, c Cell) bool {
+		return a.value == b.value && a.value == c.value && a.value != 0
+	}
+
+	for i, row := range t.board {
 		// 横のチェック
-		if t.board[i][0].value == t.board[i][1].value && t.board[i][0].value == t.board[i][2].value && t.board[i][0].value != 0 {
-			return t.player[t.board[i][0].value-1]
+		if check(row[0], row[1], row[2]) {
+			return t.player[row[0].value-1]
 		}
 
 		// 縦のチェック
-		if t.board[0][i].value == t.board[1][i].value && t.board[0][i].value == t.board[2][i].value && t.board[0][i].value != 0 {
+		if check(t.board[0][i], t.board[1][i], t.board[2][i]) {
 			return t.player[t.board[0][i].value-1]
 		}
 	}
 
 	// 斜めのチェック
-	if t.board[0][0].value == t.board[1][1].value && t.board[0][0].value == t.board[2][2].value && t.board[0][0].value != 0 {
+	if check(t.board[0][0], t.board[1][1], t.board[2][2]) {
 		return t.player[t.board[0][0].value-1]
 	}
-	if t.board[0][2].value == t.board[1][1].value && t.board[0][2].value == t.board[2][0].value && t.board[0][2].value != 0 {
+	if check(t.board[0][2], t.board[1][1], t.board[2][0]) {
 		return t.player[t.board[0][2].value-1]
 	}
 
 	// 引き分けのチェック
-	for i := 0; i < 3; i++ {
-		for j := 0; j < 3; j++ {
-			if t.board[i][j].value == 0 {
+	for _, row := range t.board {
+		for _, cell := range row {
+			if cell.value == 0 {
 				return ""
 			}
 		}
@@ -82,24 +87,25 @@ func (t *TicTacToe) outputBoard() {
 
 	fmt.Print("\033[H\033[2J")
 
-	for i := 0; i < 3; i++ {
-		for j := 0; j < 3; j++ {
-			switch t.board[i][j].value {
+	for _, row := range t.board {
+		for j, cell := range row {
+			switch cell.value {
 			case 0:
 				fmt.Print(" ")
 			case 1:
-				if t.board[i][j].lifeTime == 1 {
+				if cell.lifeTime == 1 {
 					fmt.Print("Y")
 				} else {
 					fmt.Print("X")
 				}
 			case 2:
-				if t.board[i][j].lifeTime == 1 {
+				if cell.lifeTime == 1 {
 					fmt.Print("P")
 				} else {
 					fmt.Print("O")
 				}
 			}
+
 			if j < 2 {
 				fmt.Print("|")
 			}
@@ -130,23 +136,22 @@ func (t *TicTacToe) inputWating() []int {
 
 func (t *TicTacToe) updateBoard(move []int) error {
 
-	//現在のボードをコピー
-
 	// 移動が有効かチェック
 	if t.board[move[0]][move[1]].value != 0 {
 		return fmt.Errorf("invalid move")
 	}
 
 	// 現在のボードの全セルのライフタイムを更新
-	for i := range t.board {
-		for j := range t.board[i] {
-			if t.board[i][j].value != 0 { // 空白でないセルのみ
-				t.board[i][j].lifeTime--
+	for _, row := range t.board {
+		for _, cell := range row {
+			if cell.value != 0 { // 空白でないセルのみ
+				cell.lifeTime--
 
 				// 死んだアイコンを削除
-				if t.board[i][j].lifeTime == 0 {
-					t.board[i][j].value = 0
+				if cell.lifeTime == 0 {
+					cell.value = 0
 				}
+
 			}
 		}
 	}
@@ -163,7 +168,6 @@ func (t *TicTacToe) updateBoard(move []int) error {
 func (t *TicTacToe) finishing(winner string) {
 	if winner == "none" {
 		fmt.Println("Draw")
-		return
 	}
 	fmt.Println(winner, "win")
 	fmt.Println("Game Over")
