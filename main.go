@@ -4,7 +4,7 @@ import (
 	"fmt"
 )
 
-var LIFETIME = 6
+const LIFETIME = 6
 
 type Cell struct {
 	value    int // 0:空白 1:プレイヤー1 2:プレイヤー2
@@ -178,8 +178,9 @@ func (t *TicTacToe) updateBoard(move []int) error {
 func (t *TicTacToe) finishing(winner string) {
 	if winner == "none" {
 		fmt.Println("Draw")
+	} else {
+		fmt.Println(winner, " wins")
 	}
-	fmt.Println(winner, "win")
 	fmt.Println("Game Over")
 }
 
